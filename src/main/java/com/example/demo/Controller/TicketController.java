@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -124,12 +126,12 @@ public class TicketController {
         String ext = "." + originalFilename.split("\\.")[1];
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String fileName = uuid + ext;
-        String relativePath = "src/main/resources/images/" + fileName;  // 文件保存在相对于项目根目录的路径
+        //String relativePath = "src/main/resources/static/images/" + fileName;  // 文件保存在相对于项目根目录的路径
         //File destinationFile = new File(relativePath);
 
         //Use the proper application path for image storage
         ApplicationHome applicationHome = new ApplicationHome(this.getClass());
-        String basePath = applicationHome.getDir().getParentFile().getParentFile().getAbsolutePath() + "\\src\\main\\resources\\images\\";
+        String basePath = applicationHome.getDir().getParentFile().getParentFile().getAbsolutePath() + "\\src\\main\\resources\\static\\images\\";
         String path = basePath + fileName;
 
         try {
@@ -139,32 +141,8 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("文件上传失败");
         }
 
-        return ResponseEntity.ok(relativePath);  // Return the file path to frontend
+        return ResponseEntity.ok(fileName);  // Return the file path to frontend
     }
-
-    @PostMapping("/bendi")//用于处理文件上传的接口
-// @RequestParam("file") 表示请求中有一个名为 "file" 的文件参数。MultipartFile 接口提供了许多方法来处理上传的文件
-    public String bendi(@RequestParam("file") MultipartFile file, @RequestParam("id") Integer id){
-        if(file.isEmpty()){//判断文件是否为空
-            return "图片上传是失败";
-        }
-        String originalFilename = file.getOriginalFilename();//获取文件的名字
-        String ext = "." + originalFilename.split("\\.")[1];//获取文件的后缀
-//生成一个随机图片id,并且将图片的id"-"重写为""空格
-        String uuid = UUID.randomUUID().toString().replace("-","");
-        String fileName = uuid+ext;//生成一个文件的名字
-        ApplicationHome applicationHome = new ApplicationHome(this.getClass());//获取存储的路径
-        String pre = applicationHome.getDir().getParentFile().getParentFile().getAbsolutePath()
-                +"\\src\\main\\resources\\images\\";//获取文件目录
-        String path = pre+ fileName;//组装文件目录与文件名字
-        try{
-            file.transferTo(new File(path));//将文件写入指定目录下
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return path;
-    }
-
 
 
 }
