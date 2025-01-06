@@ -14,7 +14,6 @@
                             throw new Error("删除失败，服务器错误！");
                         }
                         location.reload();
-                        return response.text();  // Assuming the response is a text message
                     })
                     .catch(error => {
                         alert("删除失败: " + error.message);
@@ -22,8 +21,54 @@
             }
         }
 
+        // function confirmEdit(id) {
+        //     const row = document.getElementById(`record-${id}`);
+        //     if (!row) {
+        //         alert(`未找到记录行: record-${id}`);
+        //         return;
+        //     }
+        //
+        //     const name = row.querySelector(".name").innerText.trim();
+        //     const time = row.querySelector(".time").innerText.trim();
+        //     const place = row.querySelector(".place").innerText.trim();
+        //     const fare = row.querySelector(".fare").innerText.trim();
+        //     const picInput = row.querySelector(".picName").querySelector("input");
+        //     const picName = picInput.files[0];
+        //
+        //     if (!name || !time || !place || !fare || !picName) {
+        //         alert("标题和内容不能为空！");
+        //         return;
+        //     }
+        //
+        //     // Create a FormData object to send the form data (including the file)
+        //     const formData = new FormData();
+        //     formData.append('name', name);
+        //     formData.append('time', time);
+        //     formData.append('place', place);
+        //     formData.append('fare', fare);
+        //     formData.append('picName', picName);  // Append the file
+        //
+        //     fetch(`/ticketinformation/updateRecord/${id}`, {
+        //         method: 'PUT',
+        //         body: formData,
+        //     })
+        //         .then(response => {
+        //             if (!response.ok) {
+        //                 throw new Error("编辑失败，服务器错误！");
+        //             }
+        //             alert("记录已更新！");
+        //         })
+        //         .catch(error => {
+        //             alert("编辑失败: " + error.message);
+        //         });
+        // }
+        function updateFileName(input) {
+            const fileName = input.files.length > 0 ? input.files[0].name : '';
+            const fileNameSpan = document.getElementById('fileName-' + input.id.split('-').pop());
+            fileNameSpan.textContent = fileName; // 显示选择的文件名
+        }
+
         function confirmEdit(id) {
-            // 获取可编辑单元格中的更新值
             const row = document.getElementById(`record-${id}`);
             if (!row) {
                 alert(`未找到记录行: record-${id}`);
@@ -34,31 +79,61 @@
             const time = row.querySelector(".time").innerText.trim();
             const place = row.querySelector(".place").innerText.trim();
             const fare = row.querySelector(".fare").innerText.trim();
-            const picName = row.querySelector(".picName").innerText.trim();
+            const picInput = row.querySelector(".picName").querySelector("input");
+            const picName = picInput.files[0];
 
-            // 验证输入是否为空
             if (!name || !time || !place || !fare || !picName) {
                 alert("标题和内容不能为空！");
                 return;
             }
-            // Send the updated data to the server
-            fetch(`/ticketinformation/updateRecord/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ name, time,place ,fare ,picName }),
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('time', time);
+            formData.append('place', place);
+            formData.append('fare', fare);
+            formData.append('file', picName);
+
+            fetch(`/ticketinformation/uploadImage`, {
+                method: 'POST',
+                body: formData,
             })
+                .then(response => response.text())
+                .then(data => {
+                    if (!data) {
+                        throw new Error('服务器返回错误');
+                    }
+                    const updateData = {
+                        id: id,
+                        name: name,
+                        time: time,
+                        place: place,
+                        fare: fare,
+                        picName: data // Use the file path returned from the server
+                    };
+
+                    return fetch(`/ticketinformation/updateRecord/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updateData),
+                    });
+                })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("编辑失败，服务器错误！");
+                        throw new Error("更新失败，服务器错误！");
                     }
-                    //alert("记录已更新！");
+                    alert("记录已更新！");
+                    location.reload();
                 })
                 .catch(error => {
-                    alert("编辑失败: " + error.message);
+                    alert("文件上传失败: " + error.message);
                 });
         }
+
+
+
         function addEmptyRow() {
             // Create an empty HelloModel object
             const helloModel = {
@@ -79,20 +154,15 @@
             })
                 .then(response => {
                     location.reload();
-                    return response.text();  // Assuming the response is a text message
                 })
                 .catch(error => {
                     alert("添加失败: " + error.message);
                 });
         }
-
-
-
     </script>
 </head>
 <body>
 <h2>所有记录</h2>
-<!--<a th:href="@{/add}">添加新记录</a> &lt;!&ndash; 修改了链接路径，保持一致性 &ndash;&gt;-->
 <table border="1">
     <thead>
     <tr>
@@ -113,15 +183,23 @@
         <td class="time" th:text="${item.time}" contenteditable="true"></td>
         <td class="place" th:text="${item.place}" contenteditable="true"></td>
         <td class="fare" th:text="${item.fare}" contenteditable="true"></td>
-        <td class="picName" th:text="${item.picName}" contenteditable="true"></td>
+<!--        <td class="picName" th:text="${item.picName}">-->
+<!--            <input type="file" th:id="'fileUpload-' + ${item.id}" name="file" accept=".jpg,.png" />-->
+<!--        </td>-->
+        <td class="picName">
+            <span th:text="${item.picName}"></span> <!-- 显示 picName -->
+            <input type="file" th:id="'fileUpload-' + ${item.id}" name="file" accept="image/*" onchange="updateFileName(this)" />
+            <span id="fileName-[[${item.id}]]"></span> <!-- 用来显示文件名 -->
+        </td>
         <td>
-            <button type="button" th:attr="onclick='confirmEdit(' + ${item.id} + ')'">确认编辑</button>
-            <button type="button" th:attr="onclick='deleteRecord(' + ${item.id} + ')'" >删除</button> <!-- Delete button using AJAX -->
+            <!-- Using th:onclick to properly inject JavaScript with dynamic content -->
+            <button type="button" th:onclick="'confirmEdit(' + ${item.id} + ')'">确认编辑</button>
+            <button type="button" th:onclick="'deleteRecord(' + ${item.id} + ')'">删除</button>
         </td>
     </tr>
     </tbody>
 </table>
-<button href="#" onclick="addEmptyRow()">添加新数据</button>
+<button onclick="addEmptyRow()">添加新数据</button>
 <div>
     <a th:href="@{/index}">查看所有记录</a>
 </div>

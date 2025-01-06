@@ -36,7 +36,16 @@ public class TicketService {
         return dao.delete(id) > 0;
     }
 
-    public boolean updateValue(TicketModel model) {
-        return dao.updateValue(model) > 0;
+//    public boolean updateValue(TicketModel model) {
+//        return dao.updateValue(model) > 0;
+//    }
+
+    public boolean updateValue(TicketModel ticketModel) {
+        // Save the file path (assuming picName is the path to the uploaded image)
+        //String filePath = "/uploads/" + ticketModel.getPicName(); // Update the file path
+        //ticketModel.setPicName(filePath);
+        // Update the record in the database
+        return dao.updateValue(ticketModel) > 0;
     }
+
 }
