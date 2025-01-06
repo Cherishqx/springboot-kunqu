@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>数据列表</title>
+    <script>
+        function deleteRecord(id) {
+            if (confirm("确定要删除这条记录吗?")) {
+                fetch(`/deleteRecord/${id}`, {
+                    method: 'DELETE',
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("删除失败，服务器错误！");
+                        }
+                        location.reload();
+                        return response.text();  // Assuming the response is a text message
+                    })
+                    .catch(error => {
+                        alert("删除失败: " + error.message);
+                    });
+            }
+        }
+
+        function confirmEdit(id) {
+            // 获取可编辑单元格中的更新值
+            const row = document.getElementById(`record-${id}`);
+            if (!row) {
+                alert(`未找到记录行: record-${id}`);
+                return;
+            }
+
+            const title = row.querySelector(".title").innerText.trim();
+            const text = row.querySelector(".text").innerText.trim();
+
+            // 验证输入是否为空
+            if (!title || !text) {
+                alert("标题和内容不能为空！");
+                return;
+            }
+            // Send the updated data to the server
+            fetch(`/updateRecord/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, text }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("编辑失败，服务器错误！");
+                    }
+                    //alert("记录已更新！");
+                })
+                .catch(error => {
+                    alert("编辑失败: " + error.message);
+                });
+        }
+        function addEmptyRow() {
+            // Create an empty HelloModel object
+            const helloModel = {
+                text: "",  // Empty text
+                title: ""  // Empty title
+            };
+
+            // Send the POST request to the backend
+            fetch(`/addEmptyRecord`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(helloModel)  // Sending the empty model as JSON
+            })
+                .then(response => {
+                    location.reload();
+                    return response.text();  // Assuming the response is a text message
+                })
+                .catch(error => {
+                    alert("添加失败: " + error.message);
+                });
+        }
+
+
+
+    </script>
+</head>
+<body>
+<h2>所有记录</h2>
+<!--<a th:href="@{/add}">添加新记录</a> &lt;!&ndash; 修改了链接路径，保持一致性 &ndash;&gt;-->
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>标题</th>
+        <th>内容</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 使用Thymeleaf的th:each迭代数据 -->
+    <tr th:each="item : ${helloModels}" th:id="'record-' + ${item.id}">
+        <td th:text="${item.id}"></td>
+        <td class="title" th:text="${item.title}" contenteditable="true"></td>
+        <td class="text" th:text="${item.text}" contenteditable="true"></td>
+        <td>
+            <!--            <a th:href="@{/edit(id=${item.id})}">编辑</a>-->
+            <button type="button" th:attr="onclick='confirmEdit(' + ${item.id} + ')'">确认编辑</button>
+            <button type="button" th:attr="onclick='deleteRecord(' + ${item.id} + ')'" >删除</button> <!-- Delete button using AJAX -->
+        </td>
+    </tr>
+    </tbody>
+</table>
+<button href="#" onclick="addEmptyRow()">添加新数据</button>
+<div>
+    <a th:href="@{/index}">查看所有记录</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>欢迎页面</title>
+</head>
+<body>
+<h2>欢迎来到Hello World应用！</h2>
+<div>
+  <a th:href="@{/list}">history数据 昆曲历史</a>
+</div>
+<div>
+  <a th:href="@{/sentences/list}">video数据 昆曲播放视频</a>
+</div>
+<div>
+  <a th:href="@{/allusers/list}">allusers数据 用户登录信息</a>
+</div>
+<div>
+  <a th:href="@{/ticketinformation/list}">ticketinformation数据 票务信息</a>
+</div>
+</body>
+</html>
